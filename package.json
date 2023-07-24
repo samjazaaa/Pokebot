@@ -1,0 +1,23 @@
+{
+  "name": "bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "Bot.js",
+  "scripts": {
+    "dev": "tsup src/Bot.ts --watch --onSuccess 'node dist/Bot.js'",
+    "build": "tsup src/Bot.ts",
+    "register": "tsup src/deploy-commands.ts --onSuccess 'node dist/deploy-commands.js'",
+    "lint": "eslint **/*.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Samjaza",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^14.11.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.2.5",
+    "tsup": "^6.7.0",
+    "typescript": "^5.0.4"
+  }
+}
