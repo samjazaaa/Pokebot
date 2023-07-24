@@ -1,8 +1,8 @@
 import { Collection } from "discord.js";
 import { ExecutableCommand } from "./Command";
-import { Hello } from "./commands/Hello";
+import { Check } from "./commands/Check";
 
-const commandList: ExecutableCommand[] = [Hello];
+const commandList: ExecutableCommand[] = [Check];
 
 export const Commands = new Collection(
   commandList.map((command) => {

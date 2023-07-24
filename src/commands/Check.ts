@@ -1,10 +1,10 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { ExecutableCommand } from "src/Command";
 
-export const Hello: ExecutableCommand = {
+export const Check: ExecutableCommand = {
   command: new SlashCommandBuilder()
-    .setName("hello")
-    .setDescription("Returns a greeting"),
+    .setName("check")
+    .setDescription("Returns the current per pack prices"),
   run: async (interaction: ChatInputCommandInteraction) => {
     const content = "Hello there!";
 

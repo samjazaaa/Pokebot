@@ -4,7 +4,7 @@
   "description": "",
   "main": "Bot.js",
   "scripts": {
-    "dev": "tsup src/Bot.ts --watch --onSuccess 'node dist/Bot.js'",
+    "dev": "tsup src/Bot.ts --watch --onSuccess 'node -r dotenv/config dist/Bot.js'",
     "build": "tsup src/Bot.ts",
     "register": "tsup src/deploy-commands.ts --onSuccess 'node dist/deploy-commands.js'",
     "lint": "eslint **/*.ts",
@@ -13,7 +13,8 @@
   "author": "Samjaza",
   "license": "ISC",
   "dependencies": {
-    "discord.js": "^14.11.0"
+    "discord.js": "^14.11.0",
+    "dotenv": "^16.3.1"
   },
   "devDependencies": {
     "@types/node": "^20.2.5",
