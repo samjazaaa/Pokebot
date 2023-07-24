@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsup src/Bot.ts --watch --onSuccess 'node -r dotenv/config dist/Bot.js'",
     "build": "tsup src/Bot.ts",
-    "register": "tsup src/deploy-commands.ts --onSuccess 'node dist/deploy-commands.js'",
+    "register": "tsup src/deploy-commands.ts --onSuccess 'node -r dotenv/config dist/deploy-commands.js'",
     "lint": "eslint **/*.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
