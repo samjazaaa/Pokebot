@@ -12,6 +12,7 @@ import * as cheerio from "cheerio";
 const BASE_URL = "https://www.cardmarket.com";
 const DISPLAY_URL = BASE_URL + "/de/Pokemon/Products/Booster-Boxes";
 const ID_DISPLAY = "53";
+const ID_GERMAN = "3";
 
 const QUERY_MAP = new Map<DisplaySize, string>([
   [18, " Display (18 Boosters)"],
@@ -21,6 +22,7 @@ const QUERY_MAP = new Map<DisplaySize, string>([
 type SetInfo = {
   name: string;
   boosterPrice: number;
+  totalPrice: number;
   displaySize: DisplaySize;
   link: string;
 };
@@ -45,7 +47,6 @@ async function getCurrentPrices(): Promise<SetInfo[]> {
   // get the last <limit> ids of sets available on cardmarket
   const limit = 20;
   const checkedExpansions = (await getAllSets()).slice(0, limit);
-  console.log(checkedExpansions);
 
   // for each set: get prices for 18 / 36 booster display and calculate per booster price
   const prices: SetInfo[] = [];
@@ -71,10 +72,16 @@ async function getCurrentPrices(): Promise<SetInfo[]> {
       const expansionPrices: SetInfo[] = [];
 
       // check normal display (36)
-      expansionPrices.push(await getPrice(expansion.name, 36, links));
+      expansionPrices.push(
+        await getPrice(expansion.name, 36, links, ID_GERMAN)
+      );
 
-      // TODO check half display (18)
-      // expansionPrices.push(await getPrice(expansion.name, 18, links));
+      // check half display (18)
+      expansionPrices.push(
+        await getPrice(expansion.name, 18, links, ID_GERMAN)
+      );
+
+      console.log(expansionPrices);
     });
 
   return prices;
@@ -106,7 +113,8 @@ async function getAllSets(): Promise<Expansion[]> {
 async function getPrice(
   expansionName: string,
   size: DisplaySize,
-  links: TableLink[]
+  links: TableLink[],
+  languageId?: string
 ): Promise<SetInfo> {
   const searchContent = QUERY_MAP.get(size)!;
 
@@ -122,19 +130,35 @@ async function getPrice(
       name: expansionName,
       displaySize: size,
       boosterPrice: -1,
+      totalPrice: -1,
       link: "",
     };
   }
-  // TODO extract price and add to array
-  const displayLink = BASE_URL + displayPath;
-  const resp = await axios.get(displayLink);
-  console.log(resp.data);
+  // extract price and add to array
+  const displayLink =
+    BASE_URL + displayPath + (languageId ? "?language=" + languageId : "");
 
-  // TODO remove
+  const resp = await axios.get(displayLink);
+  const $ = cheerio.load(resp.data);
+  const $firstRow = $("div.table-body > div.row.article-row:first");
+
+  const firstPrice = Number(
+    $firstRow
+      .find("div.price-container span")
+      .text()
+      .replace(" €", "")
+      .replace(",", ".")
+  );
+
+  const firstSellerLink = $firstRow.find("span.seller-name a").attr("href");
+
   return {
-    boosterPrice: -1,
+    boosterPrice: firstPrice / size,
+    totalPrice: firstPrice,
     displaySize: size,
-    link: "",
+    link: firstSellerLink
+      ? BASE_URL + firstSellerLink
+      : "could not find seller link",
     name: expansionName,
   };
 }
