@@ -7,6 +7,7 @@ export const Check: ExecutableCommand = {
     .setName("check")
     .setDescription("Returns the current per pack prices"),
   run: async (interaction: ChatInputCommandInteraction) => {
+    interaction.deferReply();
     const minPrices = await getMinPrices();
     console.log(minPrices);
 
@@ -14,7 +15,7 @@ export const Check: ExecutableCommand = {
 
     const content = "Hello there!";
 
-    await interaction.reply({
+    await interaction.followUp({
       ephemeral: true,
       content,
     });

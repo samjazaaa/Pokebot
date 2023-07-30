@@ -13,6 +13,7 @@ const BASE_URL = "https://www.cardmarket.com";
 const DISPLAY_URL = BASE_URL + "/de/Pokemon/Products/Booster-Boxes";
 const ID_DISPLAY = "53";
 const ID_GERMAN = "3";
+const DELAY = 1500;
 
 const QUERY_MAP = new Map<DisplaySize, string>([
   [18, " Display (18 Boosters)"],
@@ -43,20 +44,33 @@ async function getMinPrices(): Promise<SetInfo[]> {
   const checkedExpansions = (await getAllSets()).slice(0, limit);
   const minPrices: SetInfo[] = [];
 
-  for (const expansion of checkedExpansions.filter((expansion) => {
+  const filteredExtensions = checkedExpansions.filter((expansion) => {
     // TODO remove this filter after debugging
-    return expansion.cardMarketId === "5223";
-  })) {
+    return (
+      ["5223", "5318", "5142", "5093", "4979", "4434"].indexOf(
+        expansion.cardMarketId
+      ) > -1
+    );
+  });
+
+  for (const expansion of filteredExtensions) {
+    console.log("Checking set: " + expansion.name);
     const setPrices = await getCurrentSetPrices(expansion);
+    if (setPrices.length === 0) {
+      continue;
+    }
     const minPrice = setPrices.reduce((prev, curr) =>
       prev.boosterPrice <= curr.boosterPrice ? prev : curr
     );
     minPrices.push(minPrice);
+    // TODO wait to prevent 429 (too many requests)
+    await sleep(DELAY);
   }
 
   return minPrices;
 }
 
+// TODO add shiping costs
 async function getCurrentSetPrices(expansion: Expansion): Promise<SetInfo[]> {
   // for each set: get prices for 18 / 36 booster display and calculate per booster price
   const searchUrl = DISPLAY_URL + "?idCategory=" + ID_DISPLAY + "&idExpansion=";
@@ -76,15 +90,24 @@ async function getCurrentSetPrices(expansion: Expansion): Promise<SetInfo[]> {
   const expansionPrices: SetInfo[] = [];
 
   // check normal display (36)
-  expansionPrices.push(await getPrice(expansion.name, 36, links, ID_GERMAN));
+  await getPrice(expansion.name, 36, links, ID_GERMAN)
+    .then((price) => {
+      expansionPrices.push(price);
+    })
+    .catch((error) => console.error(error));
 
   // check half display (18)
-  expansionPrices.push(await getPrice(expansion.name, 18, links, ID_GERMAN));
+  await getPrice(expansion.name, 18, links, ID_GERMAN)
+    .then((price) => {
+      expansionPrices.push(price);
+    })
+    .catch((error) => console.error(error));
 
   return expansionPrices;
 }
 
 // TODO instead of getting all and sorting by number, manually select and insert ids into db?
+// TODO how to get all relevant sets? bisafans?
 async function getAllSets(): Promise<Expansion[]> {
   const resp = await axios.get(DISPLAY_URL);
 
@@ -119,16 +142,7 @@ async function getPrice(
   })?.link;
 
   if (!displayPath) {
-    console.error(
-      "Unable to find Link for " + expansionName + "(" + size + ")"
-    );
-    return {
-      name: expansionName,
-      displaySize: size,
-      boosterPrice: -1,
-      totalPrice: -1,
-      link: "",
-    };
+    return Promise.reject("Unable to find link for set: " + expansionName);
   }
   // extract price and add to array
   const displayLink =
@@ -138,6 +152,7 @@ async function getPrice(
   const $ = cheerio.load(resp.data);
   const $firstRow = $("div.table-body > div.row.article-row:first");
 
+  // TODO truncate to 2 decimals
   const firstPrice = Number(
     $firstRow
       .find("div.price-container span")
@@ -158,5 +173,7 @@ async function getPrice(
     name: expansionName,
   };
 }
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export default getMinPrices;
