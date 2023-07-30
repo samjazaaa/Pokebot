@@ -8,6 +8,7 @@ export const Check: ExecutableCommand = {
     .setDescription("Returns the current per pack prices"),
   run: async (interaction: ChatInputCommandInteraction) => {
     const minPrices = await getMinPrices();
+    console.log(minPrices);
 
     // TODO return prices in answer
 
