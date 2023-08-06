@@ -1,6 +1,8 @@
 import axios from "axios";
 import * as cheerio from "cheerio";
 
+// TODO list top 3 sellers
+// TODO caclulate shipping cost
 // TODO price graph (regular checks + storage in db => graph)
 
 const BASE_URL = "https://www.cardmarket.com";
