@@ -51,7 +51,6 @@ async function getMinPrices(): Promise<SetInfo[]> {
   const minPrices: SetInfo[] = [];
 
   for (const expansion of checkedExpansions) {
-    console.log("Checking set: " + expansion.name);
     const setPrices = await getCurrentSetPrices(expansion);
     if (setPrices.length === 0) {
       continue;
@@ -74,7 +73,6 @@ async function getCurrentSetPrices(expansion: Expansion): Promise<SetInfo[]> {
 
   const resp = await axios.get(searchUrl + expansion.cardMarketId);
   const $ = cheerio.load(resp.data);
-  // 5 * <a href="display link">Display Name</a>
   // rows are "xx Display", "xx Display (18 Boosters)", "xx Booster Bündeln", "xx 24 Sleeved-Booster-Karton", "xx 6 Display-Karton"
   const $rowLinks = $("div.table-body > div.row div.row a");
   const links = $rowLinks
