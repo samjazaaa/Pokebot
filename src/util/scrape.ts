@@ -3,17 +3,20 @@ import * as cheerio from "cheerio";
 
 // TODO price graph (regular checks + storage in db => graph)
 
-/* 
-      some sets do not have displays => ignore
-      optional: include tin boxes if under defined max price
-      include shipping costs?
-*/
-
 const BASE_URL = "https://www.cardmarket.com";
 const DISPLAY_URL = BASE_URL + "/de/Pokemon/Products/Booster-Boxes";
 const ID_DISPLAY = "53";
 const ID_GERMAN = "3";
-const DELAY = 1500;
+const DELAY = 500;
+
+const EXPANSIONS = [
+  "5385", // Obsidianflammen
+  "5318", // Entwicklungen in Paldea
+  "5223", // Karmesin Purpur
+  "5142", // Silberne Sturmwinde
+  "5093", // Verlorener Ursprung
+  "4979", // Astralglanz
+];
 
 const QUERY_MAP = new Map<DisplaySize, string>([
   [18, " Display (18 Boosters)"],
@@ -39,21 +42,15 @@ type TableLink = { link: string; content: string };
 
 // get the lowest per booster price for the last expansions
 async function getMinPrices(): Promise<SetInfo[]> {
-  // get the last <limit> ids of sets available on cardmarket
-  const limit = 20;
-  const checkedExpansions = (await getAllSets()).slice(0, limit);
-  const minPrices: SetInfo[] = [];
-
-  const filteredExtensions = checkedExpansions.filter((expansion) => {
-    // TODO remove this filter after debugging
-    return (
-      ["5223", "5318", "5142", "5093", "4979", "4434"].indexOf(
-        expansion.cardMarketId
-      ) > -1
-    );
+  // get the ids of sets available on cardmarket
+  const checkedExpansions = (await getAllSets()).filter((expansion) => {
+    // TODO currently we only check some hardcoded sets
+    return EXPANSIONS.indexOf(expansion.cardMarketId) > -1;
   });
 
-  for (const expansion of filteredExtensions) {
+  const minPrices: SetInfo[] = [];
+
+  for (const expansion of checkedExpansions) {
     console.log("Checking set: " + expansion.name);
     const setPrices = await getCurrentSetPrices(expansion);
     if (setPrices.length === 0) {
@@ -63,7 +60,7 @@ async function getMinPrices(): Promise<SetInfo[]> {
       prev.boosterPrice <= curr.boosterPrice ? prev : curr
     );
     minPrices.push(minPrice);
-    // TODO wait to prevent 429 (too many requests)
+    // wait to prevent 429 (too many requests)
     await sleep(DELAY);
   }
 
